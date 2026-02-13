@@ -26,17 +26,24 @@ An interactive baseball statistics project modeled after stathead's versus finde
 
 ## Data Sources
 
-This project leverages multiple high-quality baseball data sources:
+This project uses publicly available baseball datasets, including:
 
-1. Lahman Database: Historical baseball statistics dating back to 1871
+1. Lahman Baseball Database – Historical baseball statistics dating back to 1871
 
-2. Jeff Bagwell Data: Specialized baseball analytics datasets used mostly for WAR
+2. Retrosheet – Play-by-play baseball data
 
-3. Retrosheet: Play-by-play baseball data for detailed analysis
+3. Additional datasets for advanced metrics and analytics
+
+All dataset rights and licenses belong to their respective authors and organizations.
 
 ## Notes
 
-This project is inspired by and modeled after stathead baseball's versus finder. Schipper Statlines is created for educational purposes.
+This project is inspired by stathead baseball’s versus finder.
 
-© Noah Schipper. All rights reserved.
+Schipper Statlines is an independent educational project.
 
+## License
+
+All rights reserved for original source code.
+
+This project incorporates third-party datasets that are subject to their own licenses and terms.
