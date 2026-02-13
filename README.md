@@ -14,15 +14,21 @@ An interactive baseball statistics project modeled after stathead's versus finde
 
 ## Project Structure
 
-├── procfile    # Necessary for Render Deployment
+├── Baseball.css _CSS from the deployed version on my website_
 
-├── app.py # Main python file
+├── Baseball.html _HTML from the deployed version on my website_
 
-├── requirements.txt      # Project dependencies
+├── Baseball.js _JavaScript from the deployed version on my website_
 
-├── render.yaml    # Necessary for Render deployment
+├── procfile    _Necessary for Render Deployment_
 
-└── README.md            # This file
+├── app.py _Flask backend_
+
+├── requirements.txt      _Project dependencies_
+
+├── render.yaml    _Necessary for Render deployment_
+
+└── README.md            _This file_
 
 ## Data Sources
 
