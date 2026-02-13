@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <meta charset="UTF-8" />
+    <title>Schipper Statlines</title>
+    <link rel="icon" href="assets/favicon-32x32.png">
+    <link rel="stylesheet" href="baseball.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Mode Selection Tabs -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="switchMode('player')">
+          Compare Players
+        </button>
+        <button class="mode-tab" onclick="switchMode('team')">
+          Compare Teams
+        </button>
+      </div>
+      <!-- Player Comparison Section -->
+      <div id="player-section" class="comparison-section active">
+        <div class="input-row">
+          <label>
+            Player A:
+            <div class="input-container">
+              <input type="text" id="playerA" autocomplete="off" />
+              <div id="dropdownA" class="dropdown"></div>
+            </div>
+          </label>
+
+          <label>
+            Player B:
+            <div class="input-container">
+              <input type="text" id="playerB" autocomplete="off" />
+              <div id="dropdownB" class="dropdown"></div>
+            </div>
+          </label>
+
+          <label>
+            Mode:
+            <select id="viewMode">
+              <option value="career">Career Totals (Through 2024)</option>
+            </select>
+          </label>
+
+          <button onclick="comparePlayers()" id="compare-button">Compare Players</button>
+        </div>
+
+        <table id="comparisonTable" border="1" cellspacing="0" cellpadding="5">
+          <thead>
+            <tr>
+              <th id="playerAName">
+                <img
+                  id="photoA"
+                  src=""
+                  alt="Player A Photo"
+                  style="display: none"
+                />
+                <div class="player-name">Player A</div>
+              </th>
+              <th id="Logo">
+                <div class="logo-cell">
+                  <img
+                    id="logo"
+                    src="assets/Schipper Statlines.png"
+                    alt="Logo"
+                  />
+                </div>
+              </th>
+              <th id="playerBName">
+                <img
+                  id="photoB"
+                  src=""
+                  alt="Player B Photo"
+                  style="display: none"
+                />
+                <div class="player-name">Player B</div>
+              </th>
+            </tr>
+            <tr>
+              <th colspan="3" class="stat-header">Stats</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonBody">
+            <tr>
+              <td
+                colspan="3"
+                style="
+                  text-align: center;
+                  padding: 20px;
+                  color: #666;
+                  font-style: italic;
+                "
+              >
+                Enter player names above and click "Compare Players" to see
+                statistics
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Team Comparison Section -->
+      <div id="team-section" class="comparison-section">
+        <div class="input-row">
+          <label>
+            Team A:
+            <div class="input-container">
+              <input type="text" id="teamA" autocomplete="off" />
+              <div id="dropdownTeamA" class="dropdown"></div>
+            </div>
+          </label>
+
+          <label>
+            Team B:
+            <div class="input-container">
+              <input type="text" id="teamB" autocomplete="off" />
+              <div id="dropdownTeamB" class="dropdown"></div>
+            </div>
+          </label>
+
+          <label>
+            Mode:
+            <select id="teamViewMode">
+              <option value="franchise">Franchise History</option>
+              <option value="season">Single Season</option>
+            </select>
+          </label>
+          <label>
+            &nbsp;
+            <!-- invisible space for alignment -->
+            <button id="compare-button" onclick="compareTeams()">
+              Compare Teams
+            </button>
+          </label>
+        </div>
+
+        <table
+          id="teamComparisonTable"
+          border="1"
+          cellspacing="0"
+          cellpadding="5"
+        >
+          <thead>
+            <tr>
+              <th id="teamAName">
+                <div class="team-header">
+                  <img
+                    id="teamLogoA"
+                    class="team-logo"
+                    style="display: none"
+                    alt="Team A Logo"
+                  />
+                  <span class="team-name">Team A</span>
+                </div>
+              </th>
+              <th>
+                <div class="logo-cell">
+                  <img src="assets/Schipper Statlines.png" alt="Logo" />
+                </div>
+              </th>
+              <th id="teamBName">
+                <div class="team-header">
+                  <img
+                    id="teamLogoB"
+                    class="team-logo"
+                    style="display: none"
+                    alt="Team B Logo"
+                  />
+                  <span class="team-name">Team B</span>
+                </div>
+              </th>
+            </tr>
+            <tr>
+              <th colspan="3" class="stat-header" style="display: none">
+                Head-to-Head
+              </th>
+            </tr>
+          </thead>
+          <tbody id="teamComparisonBody">
+            <tr>
+              <td
+                colspan="3"
+                style="
+                  text-align: center;
+                  padding: 20px;
+                  color: #666;
+                  font-style: italic;
+                "
+              >
+                Enter team names above and click "Compare Teams" to see
+                statistics
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <script src="baseball.js"></script>
+  </body>
+</html>
