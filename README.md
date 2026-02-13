@@ -1,6 +1,6 @@
 # [Schipper Statlines](https://noahschipper.net/baseball)
 
-An interactive baseball statistics project modeled after stathead's versus finder. This project provides comprehensive baseball analytics and comparison capabilities using historical and modern baseball data.
+An interactive baseball statistics database. This project provides comprehensive baseball analytics and comparison capabilities using historical and modern baseball data.
 
 ## Features
 
