@@ -1,0 +1,780 @@
+/* BASE STYLES */
+
+/* Main body styling - sets up the overall page layout */
+body {
+  font-family: Arial, sans-serif;
+  max-width: 1500px;
+  margin: 0 auto; /* Centers the content horizontally */
+  padding: 20px;
+  background-color: #f8f9fa; /* Light gray background */
+  min-height: 100vh; /* Ensures full viewport height */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers content vertically */
+  transform: scale(0.75); /* 75% zoom */
+  transform-origin: top center; /* Scale from top center */
+}
+
+/* Remove default cursor pointer from all elements */
+* {
+  cursor: default;
+}
+
+/* MAIN CONTAINER */
+
+/* Primary content container with card-like appearance */
+.container {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  width: 90%;
+  max-width: 1500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative; /* Allows absolute positioning of child elements */
+}
+
+/* Mode Selection Tabs */
+.mode-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+  width: 100%;
+  justify-content: center;
+}
+
+.mode-tab {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  color: black;
+}
+
+.mode-tab.active {
+  border-bottom-color: black;
+  color: black;
+  font-weight: bold;
+}
+
+.mode-tab:hover {
+  background-color: #f8f9fa;
+}
+
+/* COMPARISON SECTIONS */
+
+/* Container for different comparison modes (hidden by default) */
+.comparison-section {
+  display: none;
+  width: 100%;
+  color: black;
+}
+
+/* Active comparison section (visible) */
+.comparison-section.active {
+  display: block;
+}
+
+/* FORM CONTROLS AND INPUT STYLING */
+
+/* Horizontal layout for form inputs */
+.input-row {
+  display: flex;
+  gap: 15px;
+  align-items: center; /* Add this line */
+  flex-wrap: wrap; /* Wraps on smaller screens */
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* Container for inputs with dropdown functionality */
+.input-container {
+  position: relative; /* Allows dropdown positioning */
+  display: inline-block;
+}
+
+/* Basic input and select styling */
+input[type="text"],
+select {
+  padding: 5px 8px;
+  font-size: 1rem;
+  min-width: 150px;
+}
+
+
+
+/* DROPDOWN MENU STYLING */
+
+/* Dropdown menu container (hidden by default) */
+.dropdown {
+  position: absolute;
+  top: 100%; /* Positions below the input */
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none; /* Connects visually to input */
+  border-radius: 0 0 4px 4px;
+  max-height: 300px;
+  overflow-y: auto; /* Scrollable if too many items */
+  z-index: 1000; /* Ensures it appears above other elements */
+  display: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Show dropdown when active */
+.dropdown.show {
+  display: block;
+}
+
+/* Individual dropdown item styling */
+.dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+/* Dropdown item hover and highlight effects */
+.dropdown-item:hover,
+.dropdown-item.highlighted {
+  background-color: #f8f9fa;
+}
+
+/* Remove border from last dropdown item */
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+/* Secondary text in dropdown items (like years played) */
+.dropdown-item .player-years {
+  font-size: 12px;
+  color: #666;
+  margin-left: 8px;
+}
+
+/* ENHANCED FORM CONTROLS */
+
+/* Consistent styling for text inputs and selects */
+input[type="text"],
+select {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  min-width: 200px;
+}
+
+/* Focus state for select elements */
+select:focus {
+  border-color: black;
+  outline: none;
+}
+
+/* Style the compare teams button */
+#compare-button {
+  padding: 8px 20px;
+  background-color: #4c53cb;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  font-weight: bold;
+  min-height: 27.5px;
+}
+
+#compare-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #3a42a3;
+}
+
+#compare-button:active {
+  transform: scale(0.95) translateY(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Form label styling */
+label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* TABLE STYLING */
+
+/* Main table styling with modern card appearance */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden; /* Ensures rounded corners work */
+  max-width: 1500px;
+  table-layout: fixed; /* Consistent column widths */
+}
+
+/* Table cell styling for headers and data */
+th,
+td {
+  text-align: center;
+  padding: 12px 8px;
+  border-bottom: 1px solid #e9ecef;
+  border: 1px solid #ccc;
+}
+
+/* Table header styling */
+th {
+  background-color: #f8f9fa; /* Light gray background */
+  font-weight: bold;
+  color: #495057;
+  vertical-align: middle;
+  padding: 15px 10px;
+}
+
+/* Table data cell styling */
+td {
+  font-family: monospace; /* Consistent number alignment */
+  font-size: 1rem;
+  white-space: wrap;  /* Prevents text wrapping */
+
+}
+
+/* Special header for statistical categories */
+.stat-header {
+  background-color: #e0e0e0;
+  font-size: 1.1rem;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: black;
+}
+
+/* LOGO STYLING */
+
+/* Container for logo display */
+.logo-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+/* Logo image styling */
+.logo-cell img,
+#logo {
+  max-width: 550px;
+  height: 350px;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  object-fit: contain; /* Maintains aspect ratio */
+  box-sizing: border-box;
+}
+
+/* STATISTICAL HIGHLIGHTING */
+
+/* Primary highlighting for better statistics */
+.better-stat {
+  background-color: #d4edda !important; /* Light green background */
+  font-weight: bold !important;
+  color: black !important;
+  font-size: 1.05rem !important;
+}
+
+/* Alternative highlighting style */
+.better-stat-alt {
+  background-color: #e8f5e8 !important;
+  color: black !important;
+  font-weight: bold;
+  border: 2px solid #4caf50 !important; /* Green border */
+}
+
+/* Highlighting for tied statistics */
+.tied-stat {
+  background-color: #fff3cd !important; /* Light yellow background */
+  color: black !important;
+  font-weight: bold;
+}
+
+/* Enhanced styling for highlighted table cells */
+td.stat-cell {
+  position: relative;
+  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transitions */
+}
+
+/* Ensure highlighting maintains proper formatting */
+td.better-stat {
+  font-family: monospace;
+  font-size: 1.05rem !important;
+  font-weight: bold !important;
+  white-space: nowrap;
+}
+
+/* Animation for statistical highlights */
+@keyframes highlight-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02); /* Slight scale increase */
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Apply animation to highlighted stats */
+.better-stat.animate {
+  animation: highlight-pulse 0.5s ease-in-out;
+}
+
+/* MODAL DIALOG STYLING */
+
+/* Modal overlay */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000; /* Above all other content */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+  animation: fadeIn 0.3s ease;
+}
+
+/* Fade-in animation for modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal content container */
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto; /* Centers vertically and horizontally */
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 500px;
+  animation: slideIn 0.3s ease;
+}
+
+/* Slide-in animation for modal content */
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Modal header styling */
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #333;
+  font-size: 20px;
+}
+
+/* Modal text styling */
+.modal-content p {
+  margin-bottom: 20px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* PLAYER/TEAM OPTIONS IN MODAL */
+
+/* Container for player selection options */
+.player-options {
+  margin-bottom: 24px;
+}
+
+/* Individual player option styling */
+.player-option {
+  padding: 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Player option hover effect */
+.player-option:hover {
+  border-color: #007bff;
+  background-color: #f8f9ff; /* Light blue tint */
+}
+
+/* Remove margin from last player option */
+.player-option:last-child {
+  margin-bottom: 0;
+}
+
+/* Player name styling in options */
+.player-details strong {
+  display: block;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+/* Player metadata (years, team, etc.) */
+.player-meta {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Modal close button */
+.modal-close {
+  background-color: #6c757d; /* Gray background */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+/* Modal close button hover effect */
+.modal-close:hover {
+  background-color: #5a6268; /* Darker gray on hover */
+}
+
+/* SUGGESTION/SEARCH STYLING */
+
+/* Individual suggestion item in dropdown */
+.suggestion-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Suggestion item hover effect */
+.suggestion-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* Remove border from last suggestion */
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+/* Note text in suggestions (for disambiguation) */
+.disambiguation-note {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Error state for suggestion items */
+.suggestion-item.error {
+  color: #dc3545; /* Red text */
+  cursor: default;
+}
+
+/* Remove hover effect for error suggestions */
+.suggestion-item.error:hover {
+  background-color: transparent;
+}
+
+/* SEARCH CONTAINER */
+
+/* Container for search input with dropdown */
+.search-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Main player search input */
+#player-search {
+  position: relative;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 400px;
+  transition: border-color 0.2s ease;
+}
+
+/* Search input focus state */
+#player-search:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); /* Blue focus ring */
+}
+
+/* Suggestions dropdown container */
+#suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+#playerAName,
+#playerBName {
+  
+}
+#photoA,
+#photoB {
+  display: block;
+  margin: 0 auto 10px auto; /* Center horizontally with bottom margin */
+  border-radius: 6px;
+  box-shadow: 0 0 8px #aaa; /* Gray shadow around logo */
+  height: 400px;
+  width: 300px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* Prevents logo distortion */
+  background: white; /* White background for transparent logos */
+  padding: 10px; /* Padding around the logo */
+  box-sizing: border-box;
+}
+/* Team name input centering */
+#teamAName,
+#teamBName {
+  text-align: center;
+}
+
+/* TEAM LOGO STYLING */
+
+/* Team logo styling with shadow and sizing */
+.team-logo,
+#teamLogoA,
+#teamLogoB {
+  display: block;
+  margin: 0 auto 10px auto; /* Center horizontally with bottom margin */
+  border-radius: 6px;
+  box-shadow: 0 0 8px #aaa; /* Gray shadow around logo */
+  height: 400px;
+  width: 300px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* Prevents logo distortion */
+  background: white; /* White background for transparent logos */
+  padding: 10px; /* Padding around the logo */
+  box-sizing: border-box;
+}
+
+/* Team name styling */
+.team-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+/* RESPONSIVE DESIGN - TABLET */
+
+/* Tablet and smaller desktop styles */
+@media (max-width: 768px) {
+  /* Stack input row vertically on tablets */
+  .input-row {
+    flex-direction: column;
+  }
+
+  /* Remove minimum width constraint */
+  .input-container {
+    min-width: unset;
+  }
+
+  /* Allow mode tabs to wrap */
+  .mode-tabs {
+    flex-wrap: wrap;
+  }
+
+  /* Smaller table text on tablets */
+  table {
+    font-size: 12px;
+  }
+
+  /* Reduced padding in table cells */
+  th,
+  td {
+    padding: 8px 4px;
+  }
+
+  td {
+    white-space: wrap;
+  }
+
+  /* Modal adjustments for tablets */
+  .modal-content {
+    margin: 10% auto;
+    width: 95%;
+    padding: 20px;
+  }
+
+  /* Smaller player option padding */
+  .player-option {
+    padding: 12px;
+  }
+
+  /* Smaller modal header text */
+  .modal-content h3 {
+    font-size: 18px;
+  }
+
+  /* Team logos responsive sizing for tablets */
+  .team-logo,
+  #teamLogoA,
+  #teamLogoB {
+    height: 300px;
+    width: 225px;
+    max-width: 100%;
+  }
+
+  /* Main logo responsive sizing for tablets */
+  .logo-cell img,
+  #logo {
+    max-width: 400px;
+    height: 250px;
+    max-width: 100%;
+  }
+}
+
+/* Mobile-specific table layout (transforms table into card layout) */
+@media (max-width: 640px) {
+  /* Reset body scale for mobile */
+  body {
+    transform: scale(1);
+    padding: 10px;
+  }
+
+  /* Container adjustments */
+  .container {
+    width: 95%;
+    padding: 15px;
+  }
+
+  /* Keep table as table - just make it more mobile friendly */
+  table {
+    font-size: 12px;
+    margin-top: 15px;
+  }
+
+  th,
+  td {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  th {
+    padding: 10px 6px;
+  }
+
+  td {
+    white-space: wrap;
+  }
+
+  /* Make stat column (middle) slightly wider */
+  th:nth-child(2),
+  td:nth-child(2) {
+    min-width: 120px;
+    font-size: 10px;
+  }
+
+  /* Keep logos but make them tiny on mobile */
+  .team-logo,
+  #teamLogoA,
+  #teamLogoB {
+    height: 80px;
+    width: 60px;
+    margin: 0 auto 5px auto;
+    padding: 5px;
+  }
+
+  .logo-cell img,
+  #logo {
+    max-width: 200px;
+    height: 120px;
+    padding: 5px;
+  }
+
+  /* Adjust input elements for mobile */
+  input[type="text"],
+  select {
+    min-width: 150px;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  /* Stack input row vertically */
+  .input-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Adjust back button for mobile */
+  .back-button {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  /* Modal adjustments for mobile */
+  .modal-content {
+    margin: 5% auto;
+    width: 95%;
+    padding: 16px;
+  }
+
+  .modal-content h3 {
+    font-size: 16px;
+  }
+
+  .player-option {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  /* Search container mobile adjustments */
+  .search-container,
+  #player-search {
+    max-width: 100%;
+  }
+
+  /* Smaller font for highlighted stats on mobile */
+  .better-stat {
+    font-size: 12px !important;
+  }
+
+  td.better-stat {
+    font-size: 12px !important;
+  }
+}
