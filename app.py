@@ -1601,17 +1601,18 @@ def get_team_code_from_search(search_term):
         "stl": "SLN",
         # Rays
         "tbd": "TBA",  # Map old code to current
-        "TBA": "TBA",  # Tampa Bay Rays
-        "tb": "TBA",  # Map TB to TBR
+        "tba": "TBA",  # Tampa Bay Rays
+        "tb": "TBA",  # Map TB to TBA
         # Rangers
-        "was": "WAS",  # Washington Senators (historical, became Rangers)
+        "ws1": "WS1",  # Washington Senators (original, became Twins)
+        "ws2": "WS2",  # Washington Senators (expansion, became Rangers)
         "tex": "TEX",  # Texas Rangers (current)
         # Blue Jays
         "tor": "TOR",
         # Nationals
         "mon": "MON",  # Montreal Expos (historical)
         "wsn": "WAS",  # Washington Nationals (current)
-        "was": "WAS",  # Map WAS to WSN for Nationals
+        "was": "WAS",  # Washington Nationals (current database code)
     }
 
     if search_term in team_codes:
@@ -1756,8 +1757,8 @@ def get_team_code_from_search(search_term):
         "rangers": "TEX",
         "texas rangers": "TEX",
         "texas": "TEX",
-        "washington senators": "WAS",
-        "senators": "WAS",
+        "washington senators": "WS2",  # Expansion Senators (became Rangers)
+        "senators": "WS2",  # Defaults to expansion Senators
         # Blue Jays
         "blue jays": "TOR",
         "toronto blue jays": "TOR",
@@ -1867,14 +1868,15 @@ def get_team_name(team_id, year=None, mode=None):
         "TBA": "Tampa Bay Rays",  # Current Rays era
         "TB": "Tampa Bay Rays",  # Alternative
         # Rangers / Washington Senators
-        "WAS": "Washington Senators",  # Before moving to Texas
+        "WS1": "Washington Senators",  # Original Senators (became Twins)
+        "WS2": "Washington Senators",  # Expansion Senators (became Rangers)
         "TEX": "Texas Rangers",  # Current
         # Blue Jays
         "TOR": "Toronto Blue Jays",
         # Nationals / Montreal Expos
         "MON": "Montreal Expos",  # Montreal era
         "WSN": "Washington Nationals",  # Current
-        "WAS": "Washington Nationals",  # Alternative (though might conflict with Senators)
+        "WAS": "Washington Nationals",  # Database code for Nationals
     }
 
     base_name = team_names.get(team_id.upper(), team_id)
@@ -1976,7 +1978,8 @@ def get_team_logo_url(team_id, year=None):
         "TBA": {"abbrev": "TB", "id": "139"},
         "TB": {"abbrev": "TB", "id": "139"},
         # Rangers
-        "WAS": {"abbrev": "TEX", "id": "140"},
+        "WS1": {"abbrev": "TEX", "id": "140"},  # Original Senators
+        "WS2": {"abbrev": "TEX", "id": "140"},  # Expansion Senators
         "TEX": {"abbrev": "TEX", "id": "140"},
         # Blue Jays
         "TOR": {"abbrev": "TOR", "id": "141"},
