@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import os
+from dotenv import load_dotenv
+load_dotenv()
 from supabase import create_client, Client
 from sqlalchemy import create_engine
 
@@ -15,7 +17,7 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 
 CORS(app, resources={
     r"/*": {
-        "origins": [ "https://schipperstatlines.onrender.com", "https://website-a7a.pages.dev", "http://127.0.0.1:5501", "https://noahschipper.net"],
+        "origins": [ "https://schipperstatlines.onrender.com", "https://website-a7a.pages.dev", "http://127.0.0.1:5501", "http://localhost:5501", "http://127.0.0.1:5500", "http://localhost:5500", "https://noahschipper.net"],
     }
 })
 
@@ -46,6 +48,105 @@ def get_supabase_client():
     return supabase
 
 
+# ─── UNIFIED TEAM DATA ──────────────────────────────────────────────────────
+# Single source of truth for every team code.
+# Keys are Lahman DB team codes. Each value contains:
+#   name       – display name
+#   espn       – ESPN logo abbreviation (lowercase)
+#   mlb_id     – MLB Stats API numeric team ID (for mlbstatic URLs)
+#   aliases    – lowercase search terms that map to this code
+#   alt_codes  – other DB codes that should resolve to this entry
+TEAMS = {
+    # Angels
+    "LAA": {"name": "Los Angeles Angels",    "espn": "laa", "mlb_id": "108", "aliases": ["angels", "los angeles angels"],                     "alt_codes": ["ALT", "CAL", "ANA"]},
+    "CAL": {"name": "California Angels",     "espn": "laa", "mlb_id": "108", "aliases": ["california angels", "anaheim angels"],               "alt_codes": ["ANA"]},
+    "ANA": {"name": "Anaheim Angels",        "espn": "laa", "mlb_id": "108", "aliases": [],                                                    "alt_codes": []},
+    # Diamondbacks
+    "ARI": {"name": "Arizona Diamondbacks",  "espn": "ari", "mlb_id": "109", "aliases": ["diamondbacks", "arizona diamondbacks", "d-backs", "dbacks"], "alt_codes": []},
+    # Braves
+    "ATL": {"name": "Atlanta Braves",        "espn": "atl", "mlb_id": "144", "aliases": ["braves", "atlanta braves", "atlanta"],               "alt_codes": ["BSN", "ML1", "MLA"]},
+    "BSN": {"name": "Boston Braves",         "espn": "atl", "mlb_id": "144", "aliases": ["boston braves"],                                     "alt_codes": []},
+    "ML1": {"name": "Milwaukee Braves",      "espn": "atl", "mlb_id": "144", "aliases": ["milwaukee braves"],                                 "alt_codes": ["MLA"]},
+    # Orioles
+    "BAL": {"name": "Baltimore Orioles",     "espn": "bal", "mlb_id": "110", "aliases": ["orioles", "baltimore orioles", "baltimore", "o's"],  "alt_codes": ["SLA"]},
+    "SLA": {"name": "St. Louis Browns",      "espn": "bal", "mlb_id": "110", "aliases": ["st. louis browns", "st louis browns", "browns"],     "alt_codes": []},
+    # Red Sox
+    "BOS": {"name": "Boston Red Sox",        "espn": "bos", "mlb_id": "111", "aliases": ["red sox", "boston red sox", "boston", "redsox"],      "alt_codes": ["BS1"]},
+    # Cubs
+    "CHN": {"name": "Chicago Cubs",          "espn": "chc", "mlb_id": "112", "aliases": ["cubs", "chicago cubs", "cubbies"],                  "alt_codes": ["CHC"]},
+    # White Sox
+    "CHA": {"name": "Chicago White Sox",     "espn": "cws", "mlb_id": "145", "aliases": ["white sox", "chicago white sox", "whitesox"],        "alt_codes": ["CHW", "CWS"]},
+    # Reds
+    "CIN": {"name": "Cincinnati Reds",       "espn": "cin", "mlb_id": "113", "aliases": ["reds", "cincinnati reds", "cincinnati"],             "alt_codes": ["CN2", "CN3"]},
+    # Guardians / Indians
+    "CLE": {"name": "Cleveland Guardians",   "espn": "cle", "mlb_id": "114", "aliases": ["guardians", "cleveland guardians", "cleveland", "indians", "cleveland indians"], "alt_codes": []},
+    # Rockies
+    "COL": {"name": "Colorado Rockies",      "espn": "col", "mlb_id": "115", "aliases": ["rockies", "colorado rockies", "colorado"],           "alt_codes": []},
+    # Tigers
+    "DET": {"name": "Detroit Tigers",        "espn": "det", "mlb_id": "116", "aliases": ["tigers", "detroit tigers", "detroit"],               "alt_codes": []},
+    # Astros
+    "HOU": {"name": "Houston Astros",        "espn": "hou", "mlb_id": "117", "aliases": ["astros", "houston astros", "houston"],               "alt_codes": []},
+    # Royals
+    "KCA": {"name": "Kansas City Royals",    "espn": "kc",  "mlb_id": "118", "aliases": ["royals", "kansas city royals", "kansas city"],       "alt_codes": ["KCR"]},
+    # Dodgers
+    "LAN": {"name": "Los Angeles Dodgers",   "espn": "lad", "mlb_id": "119", "aliases": ["dodgers", "los angeles dodgers"],                   "alt_codes": ["LAD", "BR1", "BR2", "BR4", "BRO"]},
+    "BR2": {"name": "Brooklyn Dodgers",      "espn": "lad", "mlb_id": "119", "aliases": ["brooklyn dodgers"],                                 "alt_codes": ["BR1", "BR4", "BRO"]},
+    # Marlins
+    "MIA": {"name": "Miami Marlins",         "espn": "mia", "mlb_id": "146", "aliases": ["marlins", "miami marlins", "miami"],                "alt_codes": ["FLA"]},
+    "FLA": {"name": "Florida Marlins",       "espn": "mia", "mlb_id": "146", "aliases": ["florida marlins"],                                  "alt_codes": []},
+    # Brewers
+    "MIL": {"name": "Milwaukee Brewers",     "espn": "mil", "mlb_id": "158", "aliases": ["brewers", "milwaukee brewers", "milwaukee"],         "alt_codes": ["ML4"]},
+    # Twins
+    "MIN": {"name": "Minnesota Twins",       "espn": "min", "mlb_id": "142", "aliases": ["twins", "minnesota twins", "minnesota"],             "alt_codes": ["WS1"]},
+    # Mets
+    "NYN": {"name": "New York Mets",         "espn": "nym", "mlb_id": "121", "aliases": ["mets", "new york mets", "ny mets"],                 "alt_codes": ["NYM"]},
+    # Yankees
+    "NYA": {"name": "New York Yankees",      "espn": "nyy", "mlb_id": "147", "aliases": ["yankees", "new york yankees", "ny yankees", "yanks"], "alt_codes": ["NYY"]},
+    # Athletics
+    "OAK": {"name": "Oakland Athletics",     "espn": "oak", "mlb_id": "133", "aliases": ["athletics", "oakland athletics", "oakland", "a's", "as"], "alt_codes": ["PHA", "KC1"]},
+    "PHA": {"name": "Philadelphia Athletics", "espn": "oak", "mlb_id": "133", "aliases": ["philadelphia athletics"],                           "alt_codes": []},
+    # Phillies
+    "PHI": {"name": "Philadelphia Phillies", "espn": "phi", "mlb_id": "143", "aliases": ["phillies", "philadelphia phillies", "philadelphia", "phils"], "alt_codes": ["PHN", "PH3"]},
+    # Pirates
+    "PIT": {"name": "Pittsburgh Pirates",    "espn": "pit", "mlb_id": "134", "aliases": ["pirates", "pittsburgh pirates", "pittsburgh", "bucs"], "alt_codes": ["PT1"]},
+    # Padres
+    "SDN": {"name": "San Diego Padres",      "espn": "sd",  "mlb_id": "135", "aliases": ["padres", "san diego padres", "san diego"],          "alt_codes": ["SDP", "SD"]},
+    # Mariners
+    "SEA": {"name": "Seattle Mariners",      "espn": "sea", "mlb_id": "136", "aliases": ["mariners", "seattle mariners", "seattle", "m's"],    "alt_codes": []},
+    # Giants
+    "SFN": {"name": "San Francisco Giants",  "espn": "sf",  "mlb_id": "137", "aliases": ["giants", "san francisco giants", "sf giants", "san francisco"], "alt_codes": ["SFG", "SF"]},
+    "NY1": {"name": "New York Giants",       "espn": "sf",  "mlb_id": "137", "aliases": ["new york giants"],                                  "alt_codes": []},
+    # Cardinals
+    "SLN": {"name": "St. Louis Cardinals",   "espn": "stl", "mlb_id": "138", "aliases": ["cardinals", "st. louis cardinals", "st louis cardinals", "cards", "st. louis", "st louis"], "alt_codes": ["SL4", "STL"]},
+    # Rays
+    "TBA": {"name": "Tampa Bay Rays",        "espn": "tb",  "mlb_id": "139", "aliases": ["rays", "tampa bay rays", "tampa bay"],              "alt_codes": ["TB"]},
+    "TBD": {"name": "Tampa Bay Devil Rays",  "espn": "tb",  "mlb_id": "139", "aliases": ["devil rays", "tampa bay devil rays"],               "alt_codes": []},
+    # Rangers
+    "TEX": {"name": "Texas Rangers",         "espn": "tex", "mlb_id": "140", "aliases": ["rangers", "texas rangers", "texas"],                "alt_codes": ["WS2"]},
+    # Blue Jays
+    "TOR": {"name": "Toronto Blue Jays",     "espn": "tor", "mlb_id": "141", "aliases": ["blue jays", "toronto blue jays", "toronto", "jays", "bluejays"], "alt_codes": []},
+    # Nationals / Expos
+    "WAS": {"name": "Washington Nationals",  "espn": "wsh", "mlb_id": "120", "aliases": ["nationals", "washington nationals", "washington", "nats"], "alt_codes": ["WSN"]},
+    "MON": {"name": "Montreal Expos",        "espn": "wsh", "mlb_id": "120", "aliases": ["expos", "montreal expos"],                          "alt_codes": []},
+    # Historical - Senators
+    "WS1": {"name": "Washington Senators",   "espn": "min", "mlb_id": "142", "aliases": ["washington senators", "senators"],                  "alt_codes": []},
+}
+
+# ── Derived lookup tables (built once at import time) ────────────────────────
+
+# Map alternate codes → primary code  (e.g. "CHC" → "CHN")
+_CODE_TO_PRIMARY = {}
+for _code, _info in TEAMS.items():
+    _CODE_TO_PRIMARY[_code.lower()] = _code  # self-maps
+    for _alt in _info.get("alt_codes", []):
+        _CODE_TO_PRIMARY[_alt.lower()] = _code
+
+# Map lowercase alias → primary code  (e.g. "cubs" → "CHN")
+_ALIAS_TO_CODE = {}
+for _code, _info in TEAMS.items():
+    for _alias in _info.get("aliases", []):
+        _ALIAS_TO_CODE[_alias] = _code
+
 
 KNOWN_TWO_WAY_PLAYERS = {
     # Modern era two-way players
@@ -53,8 +154,6 @@ KNOWN_TWO_WAY_PLAYERS = {
     # Historical two-way players (primarily known for both)
     "ruthba01": "Babe Ruth",
     # Players who had significant time as both (adjust as needed)
-    "rickmri01": "Rick Ankiel",  # Started as pitcher, became position player
-    "martipe02": "Pedro Martinez",  # Some hitting early in career
     # Format: 'playerid': 'Display Name'
 }
 
@@ -77,9 +176,13 @@ def get_photo_url_for_player(playerid, conn):
     """No photo URL - frontend will handle images"""
     return None
 
-def get_world_series_championships(playerid, conn):
+def get_world_series_championships(playerid, conn=None):
     """Get World Series championships for a player"""
     from sqlalchemy import text
+    
+    owns_conn = conn is None
+    if owns_conn:
+        conn = db_engine.connect()
     
     try:
         ws_query = text("""
@@ -100,8 +203,7 @@ def get_world_series_championships(playerid, conn):
         ORDER BY 1 DESC
         """)
 
-        with db_engine.connect() as conn:
-            ws_results = conn.execute(ws_query, {"playerid": playerid}).fetchall()
+        ws_results = conn.execute(ws_query, {"playerid": playerid}).fetchall()
 
         championships = []
         for row in ws_results:
@@ -122,8 +224,7 @@ def get_world_series_championships(playerid, conn):
                 ORDER BY yearid DESC
             """)
 
-            with db_engine.connect() as conn:
-                fallback_results = conn.execute(fallback_query, {"playerid": playerid}).fetchall()
+            fallback_results = conn.execute(fallback_query, {"playerid": playerid}).fetchall()
                 
             championships = []
             for year, notes in fallback_results:
@@ -138,6 +239,9 @@ def get_world_series_championships(playerid, conn):
 
         except Exception as e2:
             return []
+        finally:
+            if owns_conn:
+                conn.close()
 
 
 def get_career_war(playerid):
@@ -185,42 +289,54 @@ def get_season_war_history(playerid):
         print(f"get_season_war_history error: {e}")
         return pd.DataFrame()
 
-def detect_player_type(playerid, conn):
+def detect_player_type(playerid, conn=None):
     """Detect if player is primarily a pitcher or hitter based on their stats"""
     from sqlalchemy import text
-    pitching_query = text("""
-    SELECT COUNT(*) as pitch_seasons, SUM(g) as total_games_pitched, SUM(gs) as total_starts
-    FROM lahman_pitching WHERE playerid = :playerid
-    """)
-
-    batting_query = text("""
-    SELECT COUNT(*) as bat_seasons, SUM(g) as total_games_batted, SUM(ab) as total_at_bats
-    FROM lahman_batting WHERE playerid = :playerid
-    """)
     
-    with db_engine.connect() as conn:
+    owns_conn = conn is None
+    if owns_conn:
+        conn = db_engine.connect()
+    
+    try:
+        pitching_query = text("""
+        SELECT COUNT(*) as pitch_seasons, SUM(g) as total_games_pitched, SUM(gs) as total_starts
+        FROM lahman_pitching WHERE playerid = :playerid
+        """)
+
+        batting_query = text("""
+        SELECT COUNT(*) as bat_seasons, SUM(g) as total_games_batted, SUM(ab) as total_at_bats
+        FROM lahman_batting WHERE playerid = :playerid
+        """)
+
         pitch_result = conn.execute(pitching_query, {"playerid": playerid}).fetchone()
         bat_result = conn.execute(batting_query, {"playerid": playerid}).fetchone()
 
-    pitch_seasons = pitch_result[0] if pitch_result else 0
-    total_games_pitched = pitch_result[1] if pitch_result and pitch_result[1] else 0
-    total_starts = pitch_result[2] if pitch_result and pitch_result[2] else 0
+        pitch_seasons = pitch_result[0] if pitch_result else 0
+        total_games_pitched = pitch_result[1] if pitch_result and pitch_result[1] else 0
+        total_starts = pitch_result[2] if pitch_result and pitch_result[2] else 0
 
-    bat_seasons = bat_result[0] if bat_result else 0
-    total_games_batted = bat_result[1] if bat_result and bat_result[1] else 0
-    total_at_bats = bat_result[2] if bat_result and bat_result[2] else 0
+        bat_seasons = bat_result[0] if bat_result else 0
+        total_games_batted = bat_result[1] if bat_result and bat_result[1] else 0
+        total_at_bats = bat_result[2] if bat_result and bat_result[2] else 0
 
-    if pitch_seasons >= 3 or total_games_pitched >= 50 or total_starts >= 10:
-        return "pitcher"
-    elif bat_seasons >= 3 or total_at_bats >= 300:
-        return "hitter"
-    else:
-        return "pitcher" if pitch_seasons > 0 else "hitter"
+        if pitch_seasons >= 3 or total_games_pitched >= 50 or total_starts >= 10:
+            return "pitcher"
+        elif bat_seasons >= 3 or total_at_bats >= 300:
+            return "hitter"
+        else:
+            return "pitcher" if pitch_seasons > 0 else "hitter"
+    finally:
+        if owns_conn:
+            conn.close()
 
 
-def get_player_awards(playerid, conn):
+def get_player_awards(playerid, conn=None):
     """Get all awards for a player from the lahman database"""
     from sqlalchemy import text
+    
+    owns_conn = conn is None
+    if owns_conn:
+        conn = db_engine.connect()
     
     try:
         # Query for all awards
@@ -231,8 +347,7 @@ def get_player_awards(playerid, conn):
         ORDER BY yearid DESC, awardid
         """)
 
-        with db_engine.connect() as conn:
-            awards_data = conn.execute(awards_query, {"playerid": playerid}).fetchall()
+        awards_data = conn.execute(awards_query, {"playerid": playerid}).fetchall()
             
         awards = []
         for row in awards_data:
@@ -276,6 +391,9 @@ def get_player_awards(playerid, conn):
             "world_series_championships": [],
             "ws_count": 0,
         }
+    finally:
+        if owns_conn:
+            conn.close()
 
 
 def format_award_name(award_id):
@@ -340,9 +458,13 @@ def summarize_awards(awards):
     return summary
 
 
-def get_allstar_appearances(playerid, conn):
+def get_allstar_appearances(playerid, conn=None):
     """Get MLB All-Star Game appearances from AllstarFull table"""
     from sqlalchemy import text
+    
+    owns_conn = conn is None
+    if owns_conn:
+        conn = db_engine.connect()
     
     try:
         query = text("""
@@ -350,12 +472,14 @@ def get_allstar_appearances(playerid, conn):
             FROM lahman_allstarfull 
             WHERE playerid = :playerid
         """)
-        with db_engine.connect() as conn:
-            result = conn.execute(query, {"playerid": playerid}).fetchone()
+        result = conn.execute(query, {"playerid": playerid}).fetchone()
         
         return result[0] if result else 0
     except Exception as e:
         return 0
+    finally:
+        if owns_conn:
+            conn.close()
 
 @app.route("/")
 def serve_index():
@@ -870,24 +994,87 @@ def handle_pitcher_stats(playerid, conn, mode, photo_url, first, last):
     else:
         return jsonify({"error": "Invalid mode"}), 400
 
-def get_league_averages(conn, year):
-    """Get league average OBP and SLG for a given year"""
+# Lightweight cache for league averages by year (~4KB for all of baseball history)
+_league_avg_cache = {}
+
+def get_league_averages(conn=None, year=None):
+    """Get league average OBP and SLG for a given year (cached)"""
     from sqlalchemy import text
     
-    query = text("""
-    SELECT 
-        SUM(h + bb + hbp) * 1.0 / NULLIF(SUM(ab + bb + hbp + sf), 0) as lg_obp,
-        (SUM(h - "2b" - "3b" - hr) + 2 * SUM("2b") + 3 * SUM("3b") + 4 * SUM(hr)) * 1.0 / NULLIF(SUM(ab), 0) as lg_slg
-    FROM lahman_batting
-    WHERE yearid = :year
-    """)
+    # Convert numpy types to plain Python int
+    year = int(year)
     
-    with db_engine.connect() as conn:
+    # Return cached value if available
+    if year in _league_avg_cache:
+        return _league_avg_cache[year]
+    
+    owns_conn = conn is None
+    if owns_conn:
+        conn = db_engine.connect()
+    
+    try:
+        query = text("""
+        SELECT 
+            SUM(h + bb + hbp) * 1.0 / NULLIF(SUM(ab + bb + hbp + sf), 0) as lg_obp,
+            (SUM(h - "2b" - "3b" - hr) + 2 * SUM("2b") + 3 * SUM("3b") + 4 * SUM(hr)) * 1.0 / NULLIF(SUM(ab), 0) as lg_slg
+        FROM lahman_batting
+        WHERE yearid = :year
+        """)
+        
         result = conn.execute(query, {"year": year}).fetchone()
+        
+        if result and result[0] and result[1]:
+            avg = {"obp": float(result[0]), "slg": float(result[1])}
+        else:
+            avg = {"obp": 0.320, "slg": 0.400}  # Fallback averages
+        
+        _league_avg_cache[year] = avg
+        return avg
+    finally:
+        if owns_conn:
+            conn.close()
+
+
+def _batch_load_league_averages(years, conn=None):
+    """Fetch league averages for multiple years in a single query and cache them."""
+    from sqlalchemy import text
     
-    if result and result[0] and result[1]:
-        return {"obp": float(result[0]), "slg": float(result[1])}
-    return {"obp": 0.320, "slg": 0.400}  # Fallback averages
+    # Filter to only years not already cached
+    missing = [int(y) for y in years if int(y) not in _league_avg_cache]
+    if not missing:
+        return
+    
+    owns_conn = conn is None
+    if owns_conn:
+        conn = db_engine.connect()
+    
+    try:
+        placeholders = ",".join([f":y{i}" for i in range(len(missing))])
+        query = text(f"""
+        SELECT yearid,
+            SUM(h + bb + hbp) * 1.0 / NULLIF(SUM(ab + bb + hbp + sf), 0) as lg_obp,
+            (SUM(h - "2b" - "3b" - hr) + 2 * SUM("2b") + 3 * SUM("3b") + 4 * SUM(hr)) * 1.0 / NULLIF(SUM(ab), 0) as lg_slg
+        FROM lahman_batting
+        WHERE yearid IN ({placeholders})
+        GROUP BY yearid
+        """)
+        params = {f"y{i}": y for i, y in enumerate(missing)}
+        rows = conn.execute(query, params).fetchall()
+        
+        for row in rows:
+            yr, obp_val, slg_val = row
+            if obp_val and slg_val:
+                _league_avg_cache[int(yr)] = {"obp": float(obp_val), "slg": float(slg_val)}
+            else:
+                _league_avg_cache[int(yr)] = {"obp": 0.320, "slg": 0.400}
+        
+        # Fill any years that had no data at all
+        for y in missing:
+            if y not in _league_avg_cache:
+                _league_avg_cache[y] = {"obp": 0.320, "slg": 0.400}
+    finally:
+        if owns_conn:
+            conn.close()
 
 
 def calculate_ops_plus(obp, slg, year):
@@ -918,6 +1105,9 @@ def calculate_career_ops_plus(playerid):
     
     if df.empty:
         return 100
+    
+    # Batch-load all league averages this player needs in one query
+    _batch_load_league_averages(df['yearid'].unique())
     
     total_weighted_ops_plus = 0
     total_pa = 0
@@ -1519,263 +1709,17 @@ def get_team_code_from_search(search_term):
     """Convert team search terms to database team codes"""
     search_term = search_term.lower().strip()
 
-    # Direct team code mappings (if they search the exact code)
-    team_codes = {
-        # Angels - various historical codes
-        "alt": "ALT",  # Early Angels
-        "cal": "CAL",  # California Angels
-        "ana": "ANA",  # Anaheim Angels
-        "laa": "LAA",  # Los Angeles Angels (current)
-        # Diamondbacks
-        "ari": "ARI",
-        # Braves - historical codes
-        "bsn": "BSN",  # Boston Braves (historical)
-        "ml1": "ML1",  # Milwaukee Braves (historical)
-        "mla": "MLA",  # Another Milwaukee code
-        "atl": "ATL",  # Atlanta Braves (current)
-        # Orioles - historical St. Louis Browns
-        "sla": "SLA",  # St. Louis Browns (historical)
-        "bal": "BAL",  # Baltimore Orioles (current)
-        # Red Sox
-        "bs1": "BS1",  # Historical Boston code
-        "bos": "BOS",  # Boston Red Sox (current)
-        # Cubs
-        "chn": "CHN",  # Chicago Cubs (historical database code)
-        "chc": "CHC",  # Chicago Cubs (modern)
-        # White Sox
-        "cha": "CHA",  # Chicago White Sox (historical database code)
-        "chw": "CWS",  # Map CHW to CWS
-        "cws": "CWS",  # Chicago White Sox (current)
-        # Reds
-        "cn2": "CN2",  # Historical Cincinnati code
-        "cn3": "CN3",  # Another historical Cincinnati code
-        "cin": "CIN",  # Cincinnati Reds (current)
-        # Indians/Guardians
-        "cle": "CLE",  # Cleveland (current - covers both Indians and Guardians)
-        # Rockies
-        "col": "COL",
-        # Tigers
-        "det": "DET",
-        # Astros
-        "hou": "HOU",
-        # Royals
-        "kca": "KCA",  # Map old code to current
-        "kcr": "KCA",  # Kansas City Royals
-        # Dodgers
-        "br1": "BR1",  # Brooklyn Dodgers (very old)
-        "br2": "BR2",  # Brooklyn Dodgers (historical)
-        "br4": "BR4",  # Brooklyn Dodgers (another historical)
-        "bro": "BRO",  # Brooklyn (if it exists)
-        "lad": "LAN",  # Map LAD to LAN (database uses LAN)
-        "lan": "LAN",  # Los Angeles Dodgers (database code)
-        # Marlins
-        "fla": "FLA",  # Florida Marlins (historical)
-        "mia": "MIA",  # Miami Marlins (current)
-        # Brewers
-        "mil": "MIL",
-        # Twins
-        "min": "MIN",
-        # Mets
-        "nym": "NYN",
-        # Yankees
-        "nyy": "NYA",
-        # Athletics
-        "pha": "PHA",  # Philadelphia Athletics (historical)
-        "oak": "OAK",  # Oakland Athletics (current)
-        # Phillies
-        "phn": "PHN",  # Historical Philadelphia code
-        "ph3": "PH3",  # Another historical Philadelphia code
-        "phi": "PHI",  # Philadelphia Phillies (current)
-        # Pirates
-        "pit": "PIT",
-        # Padres
-        "sdp": "SDN",  # San Diego Padres (database code)
-        "sd": "SDN",  # Map SD to SDP
-        # Mariners
-        "sea": "SEA",
-        # Giants
-        "ny1": "NY1",  # New York Giants (historical, if it exists)
-        "sfg": "SFN",  # San Francisco Giants (database code)
-        "sf": "SFN",  # Map SF to SFG
-        # Cardinals
-        "stl": "SLN",
-        # Rays
-        "TBA": "TBA",  # Tampa Bay Rays
-        "tb": "TBA",  # Map TB to TBR
-        # Rangers
-        "was": "WAS",  # Washington Senators (historical, became Rangers)
-        # Blue Jays
-        "tor": "TOR",
-        # Nationals
-        "mon": "MON",  # Montreal Expos (historical)
-        "wsn": "WAS",  # Washington Nationals (current)
-        "was": "WAS",  # Map WAS to WSN for Nationals    
-    }
+    # Direct code lookup  (e.g. 'chc' -> 'CHN')
+    if search_term in _CODE_TO_PRIMARY:
+        return _CODE_TO_PRIMARY[search_term]
 
-    if search_term in team_codes:
-        return team_codes[search_term]
+    # Alias lookup  (e.g. 'cubs' -> 'CHN')
+    if search_term in _ALIAS_TO_CODE:
+        return _ALIAS_TO_CODE[search_term]
 
-    # Name mappings
-    name_mappings = {
-        # Angels
-        "angels": "LAA",
-        "los angeles angels": "LAA",
-        "anaheim angels": "ANA",  # Use historical code for historical name
-        "california angels": "CAL",  # Use historical code for historical name
-        # Diamondbacks
-        "diamondbacks": "ARI",
-        "arizona diamondbacks": "ARI",
-        "d-backs": "ARI",
-        "dbacks": "ARI",
-        # Braves
-        "braves": "ATL",
-        "atlanta braves": "ATL",
-        "atlanta": "ATL",
-        "boston braves": "BSN",  # Historical
-        "milwaukee braves": "ML1",  # Historical
-        # Orioles
-        "orioles": "BAL",
-        "baltimore orioles": "BAL",
-        "baltimore": "BAL",
-        "o's": "BAL",
-        "st. louis browns": "SLA",
-        "st louis browns": "SLA",
-        "browns": "SLA",
-        # Red Sox
-        "red sox": "BOS",
-        "boston red sox": "BOS",
-        "boston": "BOS",
-        "redsox": "BOS",
-        # Cubs
-        "cubs": "CHN",
-        "chicago cubs": "CHN",
-        "cubbies": "CHN",
-        # White Sox
-        "white sox": "CHA",
-        "chicago white sox": "CHA",
-        "whitesox": "CHA",
-        # Reds
-        "reds": "CIN",
-        "cincinnati reds": "CIN",
-        "cincinnati": "CIN",
-        # Guardians/Indians
-        "guardians": "CLE",
-        "cleveland guardians": "CLE",
-        "cleveland": "CLE",
-        "indians": "CLE",
-        "cleveland indians": "CLE",
-        # Rockies
-        "rockies": "COL",
-        "colorado rockies": "COL",
-        "colorado": "COL",
-        # Tigers
-        "tigers": "DET",
-        "detroit tigers": "DET",
-        "detroit": "DET",
-        # Astros
-        "astros": "HOU",
-        "houston astros": "HOU",
-        "houston": "HOU",
-        # Royals
-        "royals": "KCA",
-        "kansas city royals": "KCA",
-        "kansas city": "KCA",
-        # Dodgers
-        "dodgers": "LAN",
-        "los angeles dodgers": "LAN",
-        "brooklyn dodgers": "BR2",
-        # Marlins
-        "marlins": "MIA",
-        "miami marlins": "MIA",
-        "florida marlins": "FLA",
-        "miami": "MIA",
-        # Brewers
-        "brewers": "MIL",
-        "milwaukee brewers": "MIL",
-        "milwaukee": "MIL",
-        # Twins
-        "twins": "MIN",
-        "minnesota twins": "MIN",
-        "minnesota": "MIN",
-        # Mets
-        "mets": "NYN",
-        "new york mets": "NYN",
-        "ny mets": "NYN",
-        # Yankees
-        "yankees": "NYA",
-        "new york yankees": "NYA",
-        "ny yankees": "NYA",
-        "yanks": "NYA",
-        # Athletics
-        "athletics": "OAK",
-        "oakland athletics": "OAK",
-        "oakland": "OAK",
-        "a's": "OAK",
-        "as": "OAK",
-        "philadelphia athletics": "PHA",
-        # Phillies
-        "phillies": "PHI",
-        "philadelphia phillies": "PHI",
-        "philadelphia": "PHI",
-        "phils": "PHI",
-        # Pirates
-        "pirates": "PIT",
-        "pittsburgh pirates": "PIT",
-        "pittsburgh": "PIT",
-        "bucs": "PIT",
-        # Padres
-        "padres": "SDN",
-        "san diego padres": "SDN",
-        "san diego": "SDN",
-        # Mariners
-        "mariners": "SEA",
-        "seattle mariners": "SEA",
-        "seattle": "SEA",
-        "m's": "SEA",
-        # Giants
-        "giants": "SFN",
-        "san francisco giants": "SFN",
-        "sf giants": "SFN",
-        "san francisco": "SFN",
-        # Cardinals
-        "cardinals": "SLN",
-        "st. louis cardinals": "SLN",
-        "st louis cardinals": "SLN",
-        "cards": "SLN",
-        "st. louis": "SLN",
-        "st louis": "SLN",
-        # Rays
-        "rays": "TBA",
-        "tampa bay rays": "TBA",
-        "tampa bay": "TBA",
-        "devil rays": "TBD",
-        "tampa bay devil rays": "TBD",
-        # Rangers
-        "rangers": "TEX",
-        "texas rangers": "TEX",
-        "texas": "TEX",
-        "washington senators": "WAS",
-        "senators": "WAS",
-        # Blue Jays
-        "blue jays": "TOR",
-        "toronto blue jays": "TOR",
-        "toronto": "TOR",
-        "jays": "TOR",
-        "bluejays": "TOR",
-        # Nationals
-        "nationals": "WAS",
-        "washington nationals": "WAS",
-        "washington": "WAS",
-        "nats": "WAS",
-        "expos": "MON",
-        "montreal expos": "MON",
-    }
-
-    if search_term in name_mappings:
-        return name_mappings[search_term]
-
-    for name, code in name_mappings.items():
-        if search_term in name or name in search_term:
+    # Partial-match fallback
+    for alias, code in _ALIAS_TO_CODE.items():
+        if search_term in alias or alias in search_term:
             return code
 
     return search_term.upper()
@@ -1783,280 +1727,47 @@ def get_team_code_from_search(search_term):
 
 def get_team_name(team_id, year=None, mode=None):
     """Get full team name for display"""
-    team_names = {
-        # Angels - various eras
-        "ALT": "Los Angeles Angels",  # Early Angels
-        "CAL": "California Angels",  # California era
-        "ANA": "Anaheim Angels",  # Anaheim era
-        "LAA": "Los Angeles Angels",  # Current era
-        # Diamondbacks
-        "ARI": "Arizona Diamondbacks",
-        # Braves - moved cities
-        "BSN": "Boston Braves",  # Boston era
-        "ML1": "Milwaukee Braves",  # Milwaukee era
-        "MLA": "Milwaukee Braves",  # Alternative Milwaukee code
-        "ATL": "Atlanta Braves",  # Current Atlanta era
-        # Orioles / St. Louis Browns
-        "SLA": "St. Louis Browns",  # Before moving to Baltimore
-        "BAL": "Baltimore Orioles",  # Current
-        # Red Sox
-        "BS1": "Boston Red Sox",  # Historical code
-        "BOS": "Boston Red Sox",  # Current
-        # Cubs
-        "CHN": "Chicago Cubs",  # Database code
-        "CHC": "Chicago Cubs",  # Alternative
-        # White Sox
-        "CHA": "Chicago White Sox",  # Database code
-        "CHW": "Chicago White Sox",  # Alternative
-        "CWS": "Chicago White Sox",  # Alternative
-        # Reds
-        "CN2": "Cincinnati Reds",  # Historical code
-        "CN3": "Cincinnati Reds",  # Another historical code
-        "CIN": "Cincinnati Reds",  # Current
-        # Indians/Guardians
-        "CLE": "Cleveland Guardians",  # Current (covers both Indians/Guardians)
-        # Rockies
-        "COL": "Colorado Rockies",
-        # Tigers
-        "DET": "Detroit Tigers",
-        # Astros
-        "HOU": "Houston Astros",
-        # Royals
-        "KCA": "Kansas City Royals",  # Historical code
-        # Dodgers - Brooklyn to LA
-        "BR1": "Brooklyn Dodgers",  # Early Brooklyn era
-        "BR2": "Brooklyn Dodgers",  # Brooklyn era
-        "BR4": "Brooklyn Dodgers",  # Another Brooklyn code
-        "BRO": "Brooklyn Dodgers",  # If this code exists
-        "LAD": "Los Angeles Dodgers",  # Alternative current
-        "LAN": "Los Angeles Dodgers",  # Database code
-        # Marlins
-        "FLA": "Florida Marlins",  # Florida era
-        "MIA": "Miami Marlins",  # Current Miami era
-        # Brewers
-        "MIL": "Milwaukee Brewers",
-        # Twins
-        "MIN": "Minnesota Twins",
-        # Mets
-        "NYN": "New York Mets",
-        # Yankees
-        "NYA": "New York Yankees",
-        # Athletics - Philadelphia to Oakland
-        "PHA": "Philadelphia Athletics",  # Philadelphia era
-        "OAK": "Oakland Athletics",  # Current Oakland era
-        # Phillies
-        "PHN": "Philadelphia Phillies",  # Historical code
-        "PH3": "Philadelphia Phillies",  # Another historical code
-        "PHI": "Philadelphia Phillies",  # Current
-        # Pirates
-        "PIT": "Pittsburgh Pirates",
-        # Padres
-        "SDN": "San Diego Padres",  # Database code
-        # Mariners
-        "SEA": "Seattle Mariners",
-        # Giants - New York to San Francisco
-        "NY1": "New York Giants",  # If this code exists
-        "SFN": "San Francisco Giants",  # Current
-        "SF": "San Francisco Giants",  # Alternative
-        # Cardinals
-        "SLN": "St. Louis Cardinals",
-        # Rays
-        "TBD": "Tampa Bay Devil Rays",  # Devil Rays era
-        "TBA": "Tampa Bay Rays",  # Current Rays era
-        "TB": "Tampa Bay Rays",  # Alternative
-        # Rangers / Washington Senators
-        "WAS": "Washington Senators",  # Before moving to Texas
-        "TEX": "Texas Rangers",  # Current
-        # Blue Jays
-        "TOR": "Toronto Blue Jays",
-        # Nationals / Montreal Expos
-        "MON": "Montreal Expos",  # Montreal era
-        "WSN": "Washington Nationals",  # Current
-        "WAS": "Washington Nationals",  # Alternative (though might conflict with Senators)
-    }
+    code = _CODE_TO_PRIMARY.get(team_id.lower(), team_id.upper())
+    info = TEAMS.get(code)
+    base_name = info["name"] if info else team_id
 
-    base_name = team_names.get(team_id.upper(), team_id)
-
-    # Check mode first, then year
     if mode == "season" and year is not None:
         return f"{year} {base_name}"
     elif mode in ["franchise", "career", "overall"] or year is None:
         return f"{base_name} (All-Time)"
     else:
-        # Fallback for when year is provided but mode is unclear
         return f"{year} {base_name}"
 
 
 def get_team_logo_url(team_id, year=None):
     """Get team logo URL using working MLB logo sources"""
+    code = _CODE_TO_PRIMARY.get(team_id.lower(), team_id.upper())
+    info = TEAMS.get(code, {})
+    abbrev = info.get("espn", team_id.lower())
+    team_number = info.get("mlb_id", "0")
 
-    mlb_team_mapping = {
-        # Angels
-        "ALT": {"abbrev": "LAA", "id": "108"},
-        "CAL": {"abbrev": "LAA", "id": "108"},
-        "ANA": {"abbrev": "LAA", "id": "108"},
-        "LAA": {"abbrev": "LAA", "id": "108"},
-        # Diamondbacks
-        "ARI": {"abbrev": "ARI", "id": "109"},
-        # Braves
-        "BSN": {"abbrev": "ATL", "id": "144"},
-        "ML1": {"abbrev": "ATL", "id": "144"},
-        "MLA": {"abbrev": "ATL", "id": "144"},
-        "ATL": {"abbrev": "ATL", "id": "144"},
-        # Orioles
-        "SLA": {"abbrev": "BAL", "id": "110"},
-        "BAL": {"abbrev": "BAL", "id": "110"},
-        # Red Sox
-        "BS1": {"abbrev": "BOS", "id": "111"},
-        "BOS": {"abbrev": "BOS", "id": "111"},
-        # Cubs
-        "CHN": {"abbrev": "CHC", "id": "112"},
-        "CHC": {"abbrev": "CHC", "id": "112"},
-        # White Sox
-        "CHA": {"abbrev": "CWA", "id": "145"},
-        "CHW": {"abbrev": "CHA", "id": "145"},
-        "CWS": {"abbrev": "CWA", "id": "145"},
-        # Reds
-        "CN2": {"abbrev": "CIN", "id": "113"},
-        "CN3": {"abbrev": "CIN", "id": "113"},
-        "CIN": {"abbrev": "CIN", "id": "113"},
-        # Indians/Guardians
-        "CLE": {"abbrev": "CLE", "id": "114"},
-        # Rockies
-        "COL": {"abbrev": "COL", "id": "115"},
-        # Tigers
-        "DET": {"abbrev": "DET", "id": "116"},
-        # Astros
-        "HOU": {"abbrev": "HOU", "id": "117"},
-        # Royals
-        "KCA": {"abbrev": "KCA", "id": "118"},
-        #'KCR': {'abbrev': 'KCA', 'id': '118'},
-        # Dodgers
-        "BR1": {"abbrev": "LAD", "id": "119"},
-        "BR2": {"abbrev": "LAD", "id": "119"},
-        "BR4": {"abbrev": "LAD", "id": "119"},
-        "BRO": {"abbrev": "LAD", "id": "119"},
-        "LAD": {"abbrev": "LAD", "id": "119"},
-        "LAN": {"abbrev": "LAD", "id": "119"},
-        # Marlins
-        "FLA": {"abbrev": "MIA", "id": "146"},
-        "MIA": {"abbrev": "MIA", "id": "146"},
-        # Brewers
-        "MIL": {"abbrev": "MIL", "id": "158"},
-        # Twins
-        "MIN": {"abbrev": "MIN", "id": "142"},
-        # Mets
-        "NYN": {"abbrev": "NYN", "id": "121"},
-        # Yankees
-        "NYA": {"abbrev": "NYA", "id": "147"},
-        # Athletics
-        "PHA": {"abbrev": "OAK", "id": "133"},
-        "OAK": {"abbrev": "OAK", "id": "133"},
-        # Phillies
-        "PHN": {"abbrev": "PHI", "id": "143"},
-        "PH3": {"abbrev": "PHI", "id": "143"},
-        "PHI": {"abbrev": "PHI", "id": "143"},
-        # Pirates
-        "PIT": {"abbrev": "PIT", "id": "134"},
-        # Padres
-        "SDP": {"abbrev": "SDN", "id": "135"},
-        "SD": {"abbrev": "SDN", "id": "135"},
-        # Mariners
-        "SEA": {"abbrev": "SEA", "id": "136"},
-        # Giants
-        "NY1": {"abbrev": "SFN", "id": "137"},
-        "SFN": {"abbrev": "SFN", "id": "137"},
-        "SF": {"abbrev": "SFN", "id": "137"},
-        # Cardinals
-        "SLN": {"abbrev": "SLN", "id": "138"},
-        # Rays
-        "TBD": {"abbrev": "TB", "id": "139"},
-        "TBA": {"abbrev": "TB", "id": "139"},
-        "TB": {"abbrev": "TB", "id": "139"},
-        # Rangers
-        "WAS": {"abbrev": "TEX", "id": "140"},
-        "TEX": {"abbrev": "TEX", "id": "140"},
-        # Blue Jays
-        "TOR": {"abbrev": "TOR", "id": "141"},
-        # Nationals
-        "MON": {"abbrev": "WSH", "id": "120"},
-        "WSN": {"abbrev": "WSH", "id": "120"},
-        "WAS": {"abbrev": "WSH", "id": "120"},
-    }
-
-    # Get team info
-    team_info = mlb_team_mapping.get(
-        team_id.upper(), {"abbrev": team_id.upper(), "id": "0"}
-    )
-    abbrev = team_info["abbrev"]
-    team_number = team_info["id"]
-
-    # Try multiple URL patterns that are known to work
     logo_urls = [
-        # MLB official team logos - using team ID
         f"https://www.mlbstatic.com/team-logos/url/{team_number}.svg",
-        # Alternative MLB static URLs
-        f"https://img.mlbstatic.com/mlb-photos/image/upload/v1/team/{abbrev.lower()}/logo/current",
-        # ESPN logos (reliable fallback)
-        f"https://a.espncdn.com/i/teamlogos/mlb/500/{abbrev.lower()}.png",
-        # Sports logos database
+        f"https://img.mlbstatic.com/mlb-photos/image/upload/v1/team/{abbrev}/logo/current",
+        f"https://a.espncdn.com/i/teamlogos/mlb/500/{abbrev}.png",
         f"https://content.sportslogos.net/logos/54/{team_number}/{abbrev}-logo-primary-dark.png",
-        # Loodibee logos (free transparent PNGs)
-        f"https://loodibee.com/wp-content/uploads/mlb-{abbrev.lower()}-logo-transparent.png",
-        # TeamColorCodes fallback
-        f"https://teamcolorcodes.com/wp-content/uploads/{abbrev.lower()}-logo.png",
+        f"https://loodibee.com/wp-content/uploads/mlb-{abbrev}-logo-transparent.png",
+        f"https://teamcolorcodes.com/wp-content/uploads/{abbrev}-logo.png",
     ]
-
-    return logo_urls[0]  # Return primary URL
+    return logo_urls[0]
 
 
 def get_team_logo_with_fallback(team_id, year=None):
     """Get team logo with fallback options"""
-    mlb_team_mapping = {
-        # mappings - database code to ESPN abbreviation
-        "CHN": {"abbrev": "chc"},  # Cubs
-        "CHA": {"abbrev": "cws"},  # White Sox
-        "LAN": {"abbrev": "lad"},  # Dodgers
-        "SLN": {"abbrev": "stl"},  # Cardinals
-        "SDN": {"abbrev": "sd"},  # Padres
-        "SFN": {"abbrev": "sf"},  # Giants
-        "NYN": {"abbrev": "nym"},  # Mets
-        "NYA": {"abbrev": "nyy"},  # Yankees
-        "KCA": {"abbrev": "kc"},  # Royals 
-        "WAS": {"abbrev": "wsh"},  # Nationals
-        "TBA": {"abbrev": "tb"},  # Rays
-        "WSN": {"abbrev": "wsh"},  # Alternative Nationals code
-        "LAA": {"abbrev": "laa"},  # Angels
-        "ARI": {"abbrev": "ari"},  # Diamondbacks
-        "ATL": {"abbrev": "atl"},  # Braves
-        "BAL": {"abbrev": "bal"},  # Orioles
-        "BOS": {"abbrev": "bos"},  # Red Sox
-        "CIN": {"abbrev": "cin"},  # Reds
-        "CLE": {"abbrev": "cle"},  # Guardians
-        "COL": {"abbrev": "col"},  # Rockies
-        "DET": {"abbrev": "det"},  # Tigers
-        "HOU": {"abbrev": "hou"},  # Astros
-        "MIL": {"abbrev": "mil"},  # Brewers
-        "MIN": {"abbrev": "min"},  # Twins
-        "OAK": {"abbrev": "oak"},  # Athletics
-        "PHI": {"abbrev": "phi"},  # Phillies
-        "PIT": {"abbrev": "pit"},  # Pirates
-        "SEA": {"abbrev": "sea"},  # Mariners
-        "TEX": {"abbrev": "tex"},  # Rangers
-        "TOR": {"abbrev": "tor"},  # Blue Jays
-        "MIA": {"abbrev": "mia"},  # Marlins
-    }
-
-    team_info = mlb_team_mapping.get(team_id.upper(), {"abbrev": team_id.lower()})
-    abbrev = team_info["abbrev"]
+    code = _CODE_TO_PRIMARY.get(team_id.lower(), team_id.upper())
+    info = TEAMS.get(code, {})
+    abbrev = info.get("espn", team_id.lower())
 
     primary_url = f"https://a.espncdn.com/i/teamlogos/mlb/500/{abbrev}.png"
-
     fallback_urls = [
         f"https://loodibee.com/wp-content/uploads/mlb-{abbrev}-logo-transparent.png",
         f"https://content.sportslogos.net/logos/54/team/{abbrev}-logo-primary-dark.png",
     ]
-
     return {"primary": primary_url, "fallbacks": fallback_urls}
 
 

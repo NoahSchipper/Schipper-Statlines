@@ -70,7 +70,9 @@ const pitcherSeasonLabelMap = {
   whip: "WHIP",
 };
 
-const backendBaseUrl = "https://schipperstatlines.onrender.com";
+const backendBaseUrl = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+  ? "http://127.0.0.1:5000"
+  : "https://schipperstatlines.onrender.com";
 
 // Common father/son player mappings for quick reference
 const COMMON_FATHER_SON_PLAYERS = {
@@ -2327,154 +2329,46 @@ function switchMode(mode) {
   document.getElementById(mode + "-section").classList.add("active");
 }
 
-// ADD THESE VARIABLES at the top with your existing variables
 let teamSearchTimeout;
 let popularTeamsCache = null;
 
-// Load popular teams
+const CURRENT_TEAMS = [
+  "Angels", "Astros", "Athletics", "Blue Jays", "Braves", "Brewers",
+  "Cardinals", "Cubs", "Diamondbacks", "Dodgers", "Giants", "Guardians",
+  "Mariners", "Marlins", "Mets", "Nationals", "Orioles", "Padres",
+  "Phillies", "Pirates", "Rangers", "Rays", "Red Sox", "Reds",
+  "Rockies", "Royals", "Tigers", "Twins", "White Sox", "Yankees",
+];
+
+const POPULAR_YEAR_TEAMS = [
+  "2016 Cubs", "2020 Dodgers", "1998 Yankees", "2004 Red Sox",
+  "2019 Nationals", "2017 Astros", "2018 Red Sox", "2001 Mariners",
+  "1995 Braves", "1975 Reds", "2024 Dodgers", "2023 Rangers",
+];
+
+const HISTORIC_YEAR_TEAMS = [
+  ...POPULAR_YEAR_TEAMS,
+  "1986 Mets", "1984 Tigers", "2002 Angels", "2008 Phillies",
+  "2010 Giants", "2011 Cardinals", "2012 Giants", "2013 Red Sox",
+  "2014 Giants", "2015 Royals", "2021 Braves", "2022 Astros",
+  "1927 Yankees", "1955 Dodgers", "1969 Mets", "1976 Reds",
+  "1988 Dodgers", "1989 Athletics", "1990 Reds", "1991 Twins",
+  "1992 Blue Jays", "1993 Blue Jays", "1996 Yankees", "1997 Marlins",
+  "1999 Yankees", "2000 Yankees", "2003 Marlins", "2005 White Sox",
+  "2006 Cardinals", "2007 Red Sox", "2009 Yankees",
+];
+
+const DEFUNCT_TEAMS = ["Expos", "Senators", "Browns", "Pilots", "Colt .45s"];
+
+const ALL_TEAMS = [...CURRENT_TEAMS, ...HISTORIC_YEAR_TEAMS, ...DEFUNCT_TEAMS];
+
 function loadPopularTeams(inputId) {
-  const popularTeams = [
-    // Current MLB teams
-    "Angels",
-    "Astros",
-    "Athletics",
-    "Blue Jays",
-    "Braves",
-    "Brewers",
-    "Cardinals",
-    "Cubs",
-    "Diamondbacks",
-    "Dodgers",
-    "Giants",
-    "Guardians",
-    "Mariners",
-    "Marlins",
-    "Mets",
-    "Nationals",
-    "Orioles",
-    "Padres",
-    "Phillies",
-    "Pirates",
-    "Rangers",
-    "Rays",
-    "Red Sox",
-    "Reds",
-    "Rockies",
-    "Royals",
-    "Tigers",
-    "Twins",
-    "White Sox",
-    "Yankees",
-
-    // Popular historical teams
-    "2016 Cubs",
-    "2020 Dodgers",
-    "1998 Yankees",
-    "2004 Red Sox",
-    "2019 Nationals",
-    "2017 Astros",
-    "2018 Red Sox",
-    "2001 Mariners",
-    "1995 Braves",
-    "1975 Reds",
-    "2024 Dodgers",
-    "2023 Rangers",
-  ];
-
-  showDropdown(inputId, popularTeams);
+  showDropdown(inputId, [...CURRENT_TEAMS, ...POPULAR_YEAR_TEAMS]);
 }
 
 // Search teams
 function searchTeams(query, inputId) {
-  const allTeams = [
-    // Current MLB teams
-    "Angels",
-    "Astros",
-    "Athletics",
-    "Blue Jays",
-    "Braves",
-    "Brewers",
-    "Cardinals",
-    "Cubs",
-    "Diamondbacks",
-    "Dodgers",
-    "Giants",
-    "Guardians",
-    "Mariners",
-    "Marlins",
-    "Mets",
-    "Nationals",
-    "Orioles",
-    "Padres",
-    "Phillies",
-    "Pirates",
-    "Rangers",
-    "Rays",
-    "Red Sox",
-    "Reds",
-    "Rockies",
-    "Royals",
-    "Tigers",
-    "Twins",
-    "White Sox",
-    "Yankees",
-
-    // Popular year-specific teams
-    "1998 Yankees",
-    "2001 Mariners",
-    "2016 Cubs",
-    "2020 Dodgers",
-    "2004 Red Sox",
-    "2019 Nationals",
-    "2017 Astros",
-    "2018 Red Sox",
-    "1995 Braves",
-    "1975 Reds",
-    "1986 Mets",
-    "1984 Tigers",
-    "2002 Angels",
-    "2008 Phillies",
-    "2010 Giants",
-    "2011 Cardinals",
-    "2012 Giants",
-    "2013 Red Sox",
-    "2014 Giants",
-    "2015 Royals",
-    "2021 Braves",
-    "2022 Astros",
-    "2023 Rangers",
-    "2024 Dodgers",
-
-    // Classic teams
-    "1927 Yankees",
-    "1955 Dodgers",
-    "1969 Mets",
-    "1976 Reds",
-    "1988 Dodgers",
-    "1989 Athletics",
-    "1990 Reds",
-    "1991 Twins",
-    "1992 Blue Jays",
-    "1993 Blue Jays",
-    "1996 Yankees",
-    "1997 Marlins",
-    "1999 Yankees",
-    "2000 Yankees",
-    "2003 Marlins",
-    "2005 White Sox",
-    "2006 Cardinals",
-    "2007 Red Sox",
-    "2009 Yankees",
-
-    // Historical teams (defunct)
-    "Expos",
-    "Senators",
-    "Browns",
-    "Pilots",
-    "Colt .45s",
-  ];
-
-  const filtered = allTeams.filter((team) =>
+  const filtered = ALL_TEAMS.filter((team) =>
     team.toLowerCase().includes(query.toLowerCase()),
   );
 
