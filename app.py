@@ -36,13 +36,6 @@ def get_db_engine():
         database_url,
         pool_pre_ping=True,   # Verify connections before use
         pool_recycle=300,      # Recycle connections every 5 minutes
-        pool_size=3,           # Keep at most 3 persistent connections (Supabase free-tier friendly)
-        max_overflow=2,        # Allow up to 2 extra connections under load (5 total max)
-        pool_timeout=10,       # Wait at most 10s for a pool slot before raising
-        connect_args={
-            "connect_timeout": 10,   # psycopg2: abort connect after 10s
-            "options": "-c statement_timeout=30000",  # server-side: abort query after 30s
-        },
         echo=False             # Set to True for SQL debugging
     )
     
