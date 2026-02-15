@@ -49,7 +49,7 @@ def get_supabase_client():
 
 
 # ─── UNIFIED TEAM DATA ──────────────────────────────────────────────────────
-# Single source of truth for every team code.
+# Single source for every team code.
 # Keys are Lahman DB team codes. Each value contains:
 #   name       – display name
 #   espn       – ESPN logo abbreviation (lowercase)
