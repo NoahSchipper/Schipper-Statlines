@@ -3,8 +3,7 @@ from flask_cors import CORS
 import pandas as pd
 import os
 from supabase import create_client, Client
-from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.pool import StaticPool
+from sqlalchemy import create_engine
 
 app = Flask(__name__, static_folder="static")
 
@@ -27,7 +26,6 @@ def get_db_engine():
     if not database_url:
         raise ValueError("DATABASE_URL environment variable not set")
     
-    # For Supabase/PostgreSQL, make sure URL starts with postgresql://
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     
@@ -62,7 +60,7 @@ KNOWN_TWO_WAY_PLAYERS = {
 
 
 def is_predefined_two_way_player(playerid):
-    """Check if player is in our predefined list of two-way players"""
+    """Check if player is in predefined list of two-way players"""
     return playerid in KNOWN_TWO_WAY_PLAYERS
 
 
