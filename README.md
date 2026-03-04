@@ -66,6 +66,6 @@ Schipper Statlines is an independent educational project.
 
 ## License
 
-All rights reserved for original source code.
+MIT License
 
 This project incorporates third-party datasets that are subject to their own licenses and terms.
