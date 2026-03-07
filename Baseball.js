@@ -154,7 +154,6 @@ function formatAwardsForStructuredDisplay(awards) {
 
   // Enhanced mapping to properly distinguish TSN All-Stars from MLB All-Star Games
   const result = {
-    // FIXED: Check for World Series championships in multiple places
     championships:
       (awards.world_series_championships &&
       Array.isArray(awards.world_series_championships)
@@ -386,7 +385,10 @@ function updateComparisonTable(resA, resB, nameA, nameB) {
         }
       }
 
+      const configKey = playerType === "pitcher" ? `P_${statName}` : statName;
+  
       const row = document.createElement("tr");
+      row.setAttribute("data-config-key", configKey); 
       row.innerHTML = `
         <td>${valA}</td>
         <td style="background-color: #f1f3f4;"><strong>${statName}</strong></td>
@@ -396,7 +398,7 @@ function updateComparisonTable(resA, resB, nameA, nameB) {
     }
   }
 
-  // AWARDS SECTION - Fixed to properly check for awards
+  // AWARDS SECTION
   const hasAwardsA = resA.awards && (resA.awards.summary || resA.awards.awards);
   const hasAwardsB = resB.awards && (resB.awards.summary || resB.awards.awards);
 
@@ -468,7 +470,7 @@ function updateComparisonTable(resA, resB, nameA, nameB) {
       );
       if (hasAnyAwards && awardsAdded === 0) {
         const headerRow = document.createElement("tr");
-        headerRow.innerHTML = `<th colspan="3" class="stat-header">Awards & Honors (Through 2024 Season)</th>`;
+        headerRow.innerHTML = `<th colspan="3" class="stat-header">Awards & Honors (Through 2025 Season)</th>`;
         tbody.appendChild(headerRow);
       }
 
@@ -707,7 +709,7 @@ const statConfigurations = {
   "Playoff Series": { higherIsBetter: true },
   Playoffs: { higherIsBetter: true },
 
-  // Awards - these are the formatted versions that appear in your table
+  // Awards
   "**All-MLB Team - First Team**": { higherIsBetter: true },
   "**All-MLB Team - Second Team**": { higherIsBetter: true },
   "**Player of the Month**": { higherIsBetter: true },
@@ -752,6 +754,12 @@ const statConfigurations = {
   IP: { higherIsBetter: true }, // Innings Pitched
   CG: { higherIsBetter: true }, // Complete Games
   SHO: { higherIsBetter: true }, // Shutouts
+  "P_H":  { higherIsBetter: false },  // Hits allowed
+  "P_ER": { higherIsBetter: false },  // Earned runs
+  "P_BB": { higherIsBetter: false },  // Walks
+  "P_HR": { higherIsBetter: false },  // Home runs allowed
+  "P_GS": { higherIsBetter: true  },  // Games started
+  "P_SO": { higherIsBetter: true  },  // Strikeouts
 };
 
 // highlights better stats
@@ -795,7 +803,9 @@ function highlightBetterStats(tableId = "comparisonTable") {
     }
 
     // Try to find matching stat configuration
+    const configKey = row.getAttribute("data-config-key");
     let statConfig =
+      statConfigurations[configKey] ||
       statConfigurations[cleanStatLabel] ||
       statConfigurations["**" + cleanStatLabel + "**"] ||
       statConfigurations[statLabel];
@@ -1408,7 +1418,7 @@ function capitalizeWord(word) {
   return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
 
-// Alternative simpler function if you just want basic title case
+
 function simpleCapitalize(name) {
   if (!name) return name;
 
@@ -1556,7 +1566,6 @@ let currentDropdown = null;
 const SEARCH_DELAY = 0;
 
 // Show dropdown with players
-// FIXED: Better dropdown display
 function showDropdown(inputId, players) {
   let dropdownId;
 
@@ -1792,9 +1801,9 @@ async function searchPlayersEnhanced(query, inputId) {
   }
 }
 
-// FIXED: Input handler with better debouncing and immediate feedback
+// Input handler with better debouncing and immediate feedback
 function handlePlayerInput(e) {
-  const query = e.target.value; // Don't trim here - let user see what they're typing
+  const query = e.target.value;
   const inputId = e.target.id;
 
   // Clear any existing timeout
@@ -1900,7 +1909,7 @@ const teamStatsLabelMap = {
   rpg: "R/Gm",
   rapg: "RA/Gm",
 
-  // Playoff stats (you'll need to add these to your backend)
+  // Playoff stats
   playoff_apps: "Playoff Apps.",
   ws_apps: "WS Apps.",
   ws_championships: "WS Championships",
@@ -1957,8 +1966,8 @@ async function fetchHeadToHeadRecord(teamA, teamB, mode) {
           },
         };
       } else {
-        // Neither team has a year - default to 2024 (matching your single team behavior)
-        url += `&year=2024`;
+        // Neither team has a year - default to 2025 (matching single team behavior)
+        url += `&year=2025`;
       }
     }
     // For career/combined mode, don't add year parameter to get all-time H2H
@@ -1982,7 +1991,7 @@ async function compareTeams() {
   const mode = document.getElementById("teamViewMode").value;
 
   if (!teamA || !teamB) {
-    alert("Please enter both teams (e.g., '2024 Cubs' or 'Cubs')");
+    alert("Please enter both teams (e.g., '2025 Cubs' or 'Cubs')");
     return;
   }
 
@@ -2318,7 +2327,7 @@ function setDefaultTeamLogo(imgElement, teamName = "") {
   imgElement.style.display = "block";
 }
 
-// Mode switching (if you still need tabs)
+// Mode switching
 function switchMode(mode) {
   document.querySelectorAll(".mode-tab").forEach((tab) => {
     tab.classList.remove("active");
@@ -2343,7 +2352,7 @@ const CURRENT_TEAMS = [
 const POPULAR_YEAR_TEAMS = [
   "2016 Cubs", "2020 Dodgers", "1998 Yankees", "2004 Red Sox",
   "2019 Nationals", "2017 Astros", "2018 Red Sox", "2001 Mariners",
-  "1995 Braves", "1975 Reds", "2024 Dodgers", "2023 Rangers",
+  "1995 Braves", "1975 Reds", "2025 Dodgers", "2023 Rangers",
 ];
 
 const HISTORIC_YEAR_TEAMS = [

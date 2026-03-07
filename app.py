@@ -1289,7 +1289,7 @@ def handle_combined_team_stats(team_id, year, mode):
         actual_year = None
 
         if mode == "season":
-            actual_year = year or 2024
+            actual_year = year or 2025
             query = text("""
             SELECT yearid, teamid, 
                    -- Basic team stats
@@ -1340,7 +1340,7 @@ def handle_combined_team_stats(team_id, year, mode):
 
         else:
             # Default to season
-            actual_year = year or 2024
+            actual_year = year or 2025
             query = text("""
             SELECT yearid, teamid, 
                    g, w, l, r, ra,
@@ -1459,7 +1459,7 @@ def add_playoff_stats(df, team_id, year, mode):
         
         if mode == "season":
             # For single season, check if team made playoffs that year
-            actual_year = year or 2024
+            actual_year = year or 2025
 
             # Check if they appeared in any playoff series that year
             playoff_query = text("""
