@@ -48,7 +48,7 @@ py -3.11 -m venv .venv
 pip install -r requirements.txt
 ```
 
-Create a `.env` file in the project root and set `DATABASE_URL` to your Supabase PostgreSQL connection string. Do not commit `.env` or paste database credentials into source files. The `.env` file is ignored by Git.
+Set `DATABASE_URL` in your local environment before starting the Flask application.
 
 Start the Flask application locally:
 
