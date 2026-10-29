@@ -1,71 +1,79 @@
 # [Schipper Statlines](https://noahschipper.net/baseball)
 
-An interactive baseball statistics database. This project provides comprehensive baseball analytics and comparison capabilities using historical and modern baseball data.
+An interactive baseball statistics application with player comparisons, team analysis, historical data, and advanced metrics.
 
 ## Features
 
-1. Player Comparisons: Side-by-side statistical comparisons
-
-2. Team Analysis: Comprehensive team performance metrics and historical data
-
-3. Historical Data: Access to extensive historical baseball records
-
-4. Advanced Metrics: Modern sabermetric statistics and analytics
+- Player career and season statistics, including awards and advanced metrics
+- Team season and franchise statistics
+- Historical team head-to-head records
+- Player search and disambiguation
 
 ## Project Structure
 
-├── Baseball.css 
+| File | Purpose |
+| --- | --- |
+| `Baseball.html` | Frontend page |
+| `Baseball.css` | Frontend styles |
+| `Baseball.js` | Frontend behavior and API requests |
+| `app.py` | Flask application setup, CORS, and app-level routes |
+| `players.py` | Player API routes and statistics logic |
+| `teams.py` | Team API routes, lookup data, and statistics logic |
+| `database.py` | Loads local environment settings and creates the SQLAlchemy connection |
+| `requirements.txt` | Python dependencies |
+| `Procfile` | Render web process command |
+| `render.yaml` | Render Python runtime configuration |
 
->_CSS from the deployed version on my website_
+## API Routes
 
-├── Baseball.html 
+The frontend JavaScript calls the Flask API. It uses `http://127.0.0.1:5000` when the page is opened from localhost, and `https://schipperstatlines.onrender.com` otherwise.
 
->_HTML from the deployed version on my website_
+| Route | Purpose |
+| --- | --- |
+| `GET /health` | Health check |
+| `GET /player-two-way` | Player statistics with two-way-player selection |
+| `GET /player-disambiguate` | Player statistics with name disambiguation |
+| `GET /search-players` | Search for players |
+| `GET /popular-players` | List popular players |
+| `GET /team` | Team season or franchise statistics |
+| `GET /team/h2h` | Team head-to-head record |
 
-├── Baseball.js 
+## Local Development
 
-> _JavaScript from the deployed version on my website_
+Python 3.11 is used for deployment. From the project directory, create and activate a virtual environment in PowerShell, then install the dependencies:
 
-├── procfile    
+```powershell
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
 
->_Necessary for Render Deployment_
+Create a `.env` file in the project root and set `DATABASE_URL` to your Supabase PostgreSQL connection string. Do not commit `.env` or paste database credentials into source files. The `.env` file is ignored by Git.
 
-├── app.py 
+Start the Flask application locally:
 
->_Flask backend_
+```powershell
+python app.py
+```
 
-├── requirements.txt 
+The local API listens on port `5000`. The frontend's local API URL expects the page to be served from `localhost` or `127.0.0.1`; CORS allows the configured development ports `5500` and `5501`.
 
->_Project dependencies_
+## Deployment
 
-├── render.yaml   
+Render runs the Flask web service with `gunicorn app:app` from the `Procfile`. The app uses `DATABASE_URL` to connect from Render to the PostgreSQL database hosted by Supabase. Set `DATABASE_URL` in the Render service's environment settings; keep its value out of the repository.
 
->_Necessary for Render deployment_
-
-└── README.md           
-
->_This file_
+The SQLAlchemy connection explicitly uses the `psycopg2` driver provided by `psycopg2-binary`. Render installs it and the other dependencies from `requirements.txt`. The configured Python version is 3.11.9. When the Render service is connected to the repository, pushing to its configured branch triggers a deployment.
 
 ## Data Sources
 
 This project uses publicly available baseball datasets, including:
 
-1. Lahman Baseball Database – Historical baseball statistics dating back to 1871
+- Lahman Baseball Database, with historical statistics dating back to 1871
+- Retrosheet play-by-play data
+- Additional datasets for advanced metrics and analytics
 
-2. Retrosheet – Play-by-play baseball data
-
-3. Additional datasets for advanced metrics and analytics
-
-All dataset rights and licenses belong to their respective authors and organizations.
-
-## Notes
-
-This project is inspired by stathead baseball’s versus finder.
-
-Schipper Statlines is an independent educational project.
+Dataset rights and licenses belong to their respective authors and organizations.
 
 ## License
 
-MIT License
-
-This project incorporates third-party datasets that are subject to their own licenses and terms.
+This project is distributed under the MIT License. Third-party datasets are subject to their own licenses and terms.
