@@ -1,12 +1,14 @@
 import os
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
 
-def get_db_engine():
-    """Create SQLAlchemy engine for database connections"""
-    database_url = os.getenv("DATABASE_URL")
+load_dotenv()
 
+
+def get_db_engine():
+    database_url = os.getenv("DATABASE_URL")
     if not database_url:
         raise ValueError("DATABASE_URL environment variable not set")
 

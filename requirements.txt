@@ -1,7 +1,6 @@
 Flask==3.0.3
 gunicorn
 flask-cors
-pybaseball==2.2.7
 pandas==2.2.3
 numpy==1.26.4
 scipy==1.13.1

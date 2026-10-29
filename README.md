@@ -1,6 +1,6 @@
-# Schipper Statlines
+# [Schipper Statlines](https://noahschipper.net/baseball)
 
-An interactive baseball statistics project modeled after stathead's versus finder. This project provides comprehensive baseball analytics and comparison capabilities using historical and modern baseball data.
+An interactive baseball statistics database. This project provides comprehensive baseball analytics and comparison capabilities using historical and modern baseball data.
 
 ## Features
 
@@ -14,29 +14,58 @@ An interactive baseball statistics project modeled after stathead's versus finde
 
 ## Project Structure
 
-├── procfile    # Necessary for Render Deployment
+├── Baseball.css 
 
-├── app.py # Main python file
+>_CSS from the deployed version on my website_
 
-├── requirements.txt      # Project dependencies
+├── Baseball.html 
 
-├── render.yaml    # Necessary for Render deployment
+>_HTML from the deployed version on my website_
 
-└── README.md            # This file
+├── Baseball.js 
+
+> _JavaScript from the deployed version on my website_
+
+├── procfile    
+
+>_Necessary for Render Deployment_
+
+├── app.py 
+
+>_Flask backend_
+
+├── requirements.txt 
+
+>_Project dependencies_
+
+├── render.yaml   
+
+>_Necessary for Render deployment_
+
+└── README.md           
+
+>_This file_
 
 ## Data Sources
 
-This project leverages multiple high-quality baseball data sources:
+This project uses publicly available baseball datasets, including:
 
-1. Lahman Database: Historical baseball statistics dating back to 1871
+1. Lahman Baseball Database – Historical baseball statistics dating back to 1871
 
-2. Jeff Bagwell Data: Specialized baseball analytics datasets used mostly for WAR
+2. Retrosheet – Play-by-play baseball data
 
-3. Retrosheet: Play-by-play baseball data for detailed analysis
+3. Additional datasets for advanced metrics and analytics
+
+All dataset rights and licenses belong to their respective authors and organizations.
 
 ## Notes
 
-This project is inspired by and modeled after stathead baseball's versus finder. Schipper Statlines is created for educational purposes.
+This project is inspired by stathead baseball’s versus finder.
 
-© Noah Schipper. All rights reserved.
+Schipper Statlines is an independent educational project.
 
+## License
+
+MIT License
+
+This project incorporates third-party datasets that are subject to their own licenses and terms.
